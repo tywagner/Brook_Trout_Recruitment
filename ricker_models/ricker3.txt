@@ -1,0 +1,49 @@
+
+    model{
+    for(i in 1:n){
+        yoy[i] ~ dnorm(y.hat[i], inv.sigma.squared[site[i]])
+        y.hat[i] <- a[site[i]] * adult[i] * exp(-b[site[i]] * adult[i])     
+    }
+
+
+
+for(k in 1:J){
+	sigma[k] ~ dlnorm(mu.Sigma[k], inv.omega.sigma.squared)
+	mu.Sigma[k] <- mu.sigma  
+	inv.sigma.squared[k] <- pow(sigma[k], -2)
+}
+
+mu.sigma ~ dnorm(0, 0.0001)
+med.sigma <- exp(mu.sigma)
+omega.sigma ~ dunif(0,10)
+inv.omega.sigma.squared <- pow(omega.sigma, -2)
+
+
+    # varying parameters
+    for(j in 1:J){
+        a[j] <- BB[j,1]
+        b[j] <- exp(BB[j,2])
+        BB[j,1:K] ~ dmnorm (BB.hat[j,], Tau.B[,])
+        BB.hat[j,1] <- mu.a
+        BB.hat[j,2] <- mu.b
+    }
+
+    # Priors for population-average parameters
+    mu.a ~ dnorm(0, 0.0001)
+    mu.b ~ dnorm(0, 0.0001)
+
+    # Model variance-covariance
+    Tau.B[1:K,1:K] ~ dwish(W[,], df)
+    df <- K+1
+    Sigma.B[1:K,1:K] <- inverse(Tau.B[,])
+    for (k in 1:K){
+        for (k.prime in 1:K){
+            rho.B[k,k.prime] <- Sigma.B[k,k.prime]/
+            sqrt(Sigma.B[k,k]*Sigma.B[k.prime,k.prime])
+        }
+        sigma.B[k] <- sqrt(Sigma.B[k,k])
+    }
+
+
+     } # end model
+    

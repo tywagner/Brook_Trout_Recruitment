@@ -1,0 +1,46 @@
+
+model{
+    for(i in 1:n){
+        yoy[i] ~ dlnorm(y.hat[i], tau.y)
+        y.hat[i] <- log(adult[i]) + log(a[site[i]]) -log(1 + b[site[i]] + adult[i] + c[site[i]] * flow[i])
+        
+    }
+
+    tau.y <- pow(sigma.y,-2)
+    sigma.y ~ dunif(0,5)
+
+    # varying parameters
+    for(j in 1:J){
+        a[j] <- exp(BB[j,1])
+        b[j] <- exp(BB[j,2])
+        c[j] <- exp(BB[j,3])
+        BB[j,1:K] ~ dmnorm (BB.hat[j,], Tau.B[,])
+        BB.hat[j,1] <- mu.a
+        BB.hat[j,2] <- mu.b
+        BB.hat[j,3] <- mu.c
+    }
+
+    # Priors for population-average parameters
+    mu.a ~ dunif(-10, 10)
+    mu.b ~ dunif(-10, 10)
+    mu.c ~ dunif(-10, 10)
+    
+    mu.A <- exp(mu.a)
+    mu.B <- exp(mu.b)
+    mu.C <- exp(mu.c)
+
+    # Model variance-covariance
+    Tau.B[1:K,1:K] ~ dwish(W[,], df)
+    df <- K+1
+    Sigma.B[1:K,1:K] <- inverse(Tau.B[,])
+    for (k in 1:K){
+        for (k.prime in 1:K){
+            rho.B[k,k.prime] <- Sigma.B[k,k.prime]/
+            sqrt(Sigma.B[k,k]*Sigma.B[k.prime,k.prime])
+        }
+        sigma.B[k] <- sqrt(Sigma.B[k,k])
+    }
+
+
+} # end model
+    
